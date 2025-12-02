@@ -1,68 +1,51 @@
 # Healthcare Call Analytics Platform
 
-> **Powered by Cloudera Data Platform**
+**Powered by Cloudera Data Platform**
 
-A comprehensive web application for transcribing and analyzing patient-provider healthcare calls using NVIDIA NIM's Riva-ASR-Whisper and Nemotron models. Extract valuable healthcare insights, manage audio files, and index data in Solr for powerful search and analytics.
+A web application for transcribing and analyzing patient-provider healthcare calls using NVIDIA NIM's Riva-ASR-Whisper and Nemotron models. Extract healthcare insights, manage audio files, and index data in Solr for search and analytics.
 
-## 🎯 Key Features
+## Key Features
 
-### 🎤 Audio Transcription
-- **NVIDIA Riva-ASR-Whisper**: State-of-the-art speech recognition
-- **Multiple Audio Formats**: WAV, MP3, M4A, FLAC, OGG, OPUS
-- **Automatic Preprocessing**: Pure Python audio conversion (no ffmpeg required)
-- **Accurate Duration Tracking**: Calculates actual audio length
+### Audio Transcription
+- NVIDIA Riva-ASR-Whisper speech recognition
+- Multiple audio formats: WAV, MP3, M4A, FLAC, OGG, OPUS
+- Pure Python audio conversion
+- Automatic duration calculation
 
-### 🧠 AI-Powered Analytics
-- **Nemotron AI Integration**: Advanced NLP for healthcare insights
-- **Medical Conditions Detection**: AI-based condition identification
-- **Medication Extraction**: Drug names, dosages, frequencies with context
-- **Symptom Analysis**: Patient-reported symptoms with context
-- **Follow-up Actions**: Appointments, tests, prescriptions
-- **Call Type Detection**: Clinical, Administrative, or General
-- **Urgency Assessment**: Context-aware urgency levels (low/medium/high)
-- **Sentiment Analysis**: Overall call sentiment tracking
-- **Compliance Indicators**: Documentation quality metrics
+### AI-Powered Analytics
+- Nemotron AI integration for healthcare insights
+- Medical conditions, medications, and symptoms extraction
+- Follow-up actions, urgency assessment, sentiment analysis
+- Call type detection (Clinical, Administrative, General)
+- Compliance indicators and documentation quality
 
-### 📁 File Management
-- **Nested Folder Structure**: Organize audio files hierarchically
-- **Drag-and-Drop Upload**: Easy file upload interface
-- **File Browser**: Navigate through your audio library
-- **File Deletion**: Remove files directly from UI
-- **Persistent Storage**: Local filesystem storage
-- **Analysis Versioning**: Track multiple analysis attempts (v1, v2, etc.)
+### File Management
+- Nested folder organization
+- Drag-and-drop file upload
+- Analysis versioning (v1, v2, etc.)
+- File deletion from UI
 
-### 🔍 Solr Integration & Dashboard
-- **One-Click Indexing**: Push analysis results to Cloudera Solr
-- **Separate Authentication**: Dedicated Solr CDP token support
-- **Interactive Dashboard**: Query and visualize indexed data
-- **Categorical Insights**: Top medications, conditions, symptoms
-- **Advanced Search**: Full-text search across all fields
-- **Multi-Filter Support**: Filter by urgency, call type, sentiment
-- **Pagination**: Navigate large result sets
-- **Document Viewer**: View complete Solr documents
+### Solr Integration & Dashboard
+- Push analysis results to Cloudera Solr
+- Interactive dashboard with categorical insights
+- Search and filter across all indexed calls
+- View complete Solr documents
 
-### 🔄 Performance & Reliability
-- **Parallel API Calls**: Concurrent dashboard data loading
-- **Concurrent AI Processing**: Simultaneous Nemotron requests
-- **Automatic Token Renewal**: Knox token auto-refresh (optional)
-- **Health Monitoring**: Real-time model status checks
-- **Error Handling**: Graceful failures with detailed messages
+### Performance
+- Parallel API calls for faster loading
+- Concurrent AI processing
+- Automatic Knox token renewal
+- Real-time model health monitoring
 
-### 💾 Data Export
-- **Structured JSON Output**: Complete analysis results
-- **Downloadable Results**: Export as JSON
-- **Copy to Clipboard**: Quick transcription copying
-- **Solr-Ready Format**: Pre-structured for indexing
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
-- **Python 3.9+**
-- **Cloudera Data Platform (CDP)** with:
+- Python 3.9+
+- Cloudera Data Platform (CDP) with:
   - NVIDIA NIM Riva-ASR-Whisper endpoint
-  - NVIDIA Nemotron model endpoint (optional, for AI summaries)
-  - Cloudera Solr (optional, for data indexing)
-- **CDP Access Token** (JWT)
+  - NVIDIA Nemotron model endpoint (optional)
+  - Cloudera Solr (optional)
+- CDP Access Token (JWT)
 
 ### Installation
 
@@ -99,7 +82,7 @@ http://0.0.0.0:8000
    - Click **Save Settings**
    - Settings persist in `.env` file
 
-## ⚙️ Configuration
+## Configuration
 
 ### Required Settings
 
@@ -180,7 +163,7 @@ PORT=8000
 DEFAULT_LANGUAGE=en
 ```
 
-## 📖 Usage Guide
+## Usage Guide
 
 ### Analyzing Calls
 
@@ -208,7 +191,7 @@ DEFAULT_LANGUAGE=en
 - Latest version shown by default
 - All versions stored in `results/` directory
 
-## 🏥 Healthcare Use Cases
+## Healthcare Use Cases
 
 ### 1. Clinical Documentation
 - Transcribe patient-provider calls
@@ -232,7 +215,7 @@ DEFAULT_LANGUAGE=en
 - Ensure regulatory compliance (HIPAA)
 - Identify training opportunities
 
-## 📊 Extracted Healthcare Metrics
+## Extracted Healthcare Metrics
 
 ### Basic Metadata
 - Call duration (automatically calculated)
@@ -258,7 +241,7 @@ DEFAULT_LANGUAGE=en
 - Key Takeaways (bullet points)
 - Recommended Actions (specific next steps)
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ├── app.py                          # FastAPI application & API endpoints
@@ -283,7 +266,7 @@ DEFAULT_LANGUAGE=en
 └── .env                            # Configuration (auto-generated)
 ```
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Files
 - `GET /api/files/browse?path=<path>` - Browse files/folders
@@ -309,7 +292,7 @@ DEFAULT_LANGUAGE=en
 - `GET /api/solr/stats` - Get collection statistics
 - `GET /api/solr/categorical-facets/{category}` - Get medication/condition/symptom counts
 
-## 🔐 Security Best Practices
+## Security Best Practices
 
 ### Token Management
 - Never commit tokens to Git (`.env` is in `.gitignore`)
@@ -331,7 +314,7 @@ DEFAULT_LANGUAGE=en
 - Implement data retention policies
 - Regular security audits
 
-## 🎨 User Interface Features
+## User Interface Features
 
 ### Modern Design
 - Healthcare-themed color scheme
@@ -352,87 +335,10 @@ DEFAULT_LANGUAGE=en
 - Modal document viewer
 - Copy-to-clipboard functionality
 
-## 🛠️ Troubleshooting
-
-### Audio Processing Issues
-- **Error**: "Audio decoder exception"
-  - **Solution**: Audio is automatically converted to 16kHz WAV
-  - Ensure `soundfile`, `resampy`, `audioread` are installed
-
-### Connection Issues
-- **Error**: "Failed to connect to Riva ASR"
-  - **Solution**: Check Settings → Transcription tab
-  - Verify CDP endpoint URL is correct
-  - Ensure token is valid (check last status check time)
-
-### Solr Issues
-- **Error**: "404 Not Found" when pushing to Solr
-  - **Solution**: Collection is auto-created on first push
-  - Verify Solr base URL and token in Settings
-  - Check Solr endpoint is accessible
-
-### Token Expiration
-- **Error**: "Token has expired"
-  - **Solution**: Enable auto-renewal in Settings → General
-  - Or manually refresh token in CDP UI
-  - Update token in Settings
-
-## 📚 Additional Documentation
-
-- **[QUICKSTART_CDP.md](QUICKSTART_CDP.md)**: CDP-specific setup guide
-- **[SOLR_INTEGRATION.md](SOLR_INTEGRATION.md)**: Detailed Solr setup
-- **[SOLR_DASHBOARD.md](SOLR_DASHBOARD.md)**: Dashboard features guide
-- **[TOKEN_AUTO_RENEWAL.md](TOKEN_AUTO_RENEWAL.md)**: Knox token renewal
-- **[DURATION_FIX.md](DURATION_FIX.md)**: Audio duration calculation
-- **[DASHBOARD_FIX_SUMMARY.md](DASHBOARD_FIX_SUMMARY.md)**: Dashboard fixes
-
-## 🔄 Recent Updates
-
-### Version 2.0 (December 2025)
-- ✨ Solr integration with interactive dashboard
-- ✨ AI-powered extraction using Nemotron
-- ✨ Concurrent API calls for faster performance
-- ✨ Automatic Knox token renewal
-- ✨ Audio duration calculation from actual samples
-- ✨ Analysis versioning system
-- ✨ File deletion from UI
-- ✨ Improved markdown rendering
-- ✨ Modal document viewer
-- 🐛 Fixed categorical insights display
-- 🐛 Fixed search functionality
-- 🐛 Reduced whitespace in AI summaries
-- 💅 Updated branding to "Powered by Cloudera Data Platform"
-
-## 🤝 Contributing
-
-This is a demonstration application. Customize based on your organization's needs:
-- Modify extracted metrics in `services/analytics.py`
-- Add custom Solr fields in `services/solr_indexer.py`
-- Extend UI components in `static/`
-- Add new API endpoints in `app.py`
-
-## 📄 License
+## License
 
 See LICENSE file for details.
 
-## ⚠️ Disclaimer
+## Disclaimer
 
-**This application is for demonstration purposes.** 
-
-Ensure compliance with:
-- Healthcare regulations (HIPAA, GDPR)
-- Organizational data policies
-- Privacy laws in your jurisdiction
-- CDP security guidelines
-
-Always validate AI-generated insights with healthcare professionals.
-
-## 🆘 Support
-
-- **NVIDIA NIM**: [NVIDIA Developer Forums](https://forums.developer.nvidia.com/)
-- **Cloudera**: [Cloudera Community](https://community.cloudera.com/)
-- **Application Issues**: Open a GitHub issue
-
----
-
-**Built with ❤️ for Healthcare Analytics on Cloudera Data Platform**
+This application is for demonstration purposes. Ensure compliance with healthcare regulations (HIPAA, GDPR), organizational data policies, and CDP security guidelines. Always validate AI-generated insights with healthcare professionals.

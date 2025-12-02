@@ -1,0 +1,27 @@
+# Healthcare Call Analytics - Python Dependencies
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
+
+# NVIDIA NIM and Audio Processing
+aiohttp>=3.9.1
+aiofiles>=23.2.1
+
+# Audio processing (pure Python, no system dependencies)
+soundfile>=0.12.1
+resampy>=0.4.2
+numpy>=1.24.0
+audioread>=3.0.0  # For MP3/M4A support
+
+# Data Processing (Python 3.13 compatible)
+pydantic>=2.6.0
+
+# LLM Integration
+openai>=1.12.0
+
+# Utilities
+python-dotenv>=1.0.0
+requests>=2.31.0
+

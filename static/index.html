@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Call Analytics - NVIDIA Riva ASR</title>
+    <link rel="stylesheet" href="/static/styles.css?v=20251202-11">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-heartbeat"></i>
+                    <h1>Healthcare Call Analytics</h1>
+                </div>
+                <div class="header-info">
+                    <span class="powered-by">Powered by Cloudera Data Platform</span>
+                    <button class="btn btn-sm btn-primary" id="dashboardToggle" onclick="toggleView()" title="Toggle Dashboard" style="display: none;">
+                        <i class="fas fa-chart-bar"></i> Dashboard
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="showSettingsModal()" title="Settings">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                    <div class="status-indicator" id="statusIndicator">
+                        <div class="status-item">
+                            <i class="fas fa-circle" id="rivaStatus" style="color: #9e9e9e;"></i>
+                            <span>Riva ASR: <span id="rivaStatusText">Checking...</span></span>
+                            <small id="rivaLastCheck"></small>
+                        </div>
+                        <div class="status-item">
+                            <i class="fas fa-circle" id="nemotronStatus" style="color: #9e9e9e;"></i>
+                            <span>Nemotron: <span id="nemotronStatusText">Checking...</span></span>
+                            <small id="nemotronLastCheck"></small>
+                        </div>
+                        <button class="btn-icon" onclick="refreshHealth()" title="Refresh Status">
+                            <i class="fas fa-sync-alt" id="refreshIcon"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar - File Browser -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2><i class="fas fa-folder-open"></i> Audio Files</h2>
+                    <div class="sidebar-actions">
+                        <button class="btn btn-sm btn-primary" onclick="showUploadModal()">
+                            <i class="fas fa-upload"></i> Upload
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="showNewFolderModal()">
+                            <i class="fas fa-folder-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="file-browser" id="fileBrowser">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading files...
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Panel -->
+            <main class="main-panel">
+                <!-- Welcome Screen -->
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-content">
+                        <i class="fas fa-stethoscope"></i>
+                        <h2>Welcome to Healthcare Call Analytics</h2>
+                        <p>Analyze patient-provider calls using AI-powered transcription and extract valuable healthcare insights.</p>
+                        <div class="features">
+                            <div class="feature">
+                                <i class="fas fa-microphone"></i>
+                                <h3>Transcription</h3>
+                                <p>NVIDIA Riva-ASR Whisper</p>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-brain"></i>
+                                <h3>AI Analysis</h3>
+                                <p>Extract medical insights</p>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-chart-line"></i>
+                                <h3>Structured Data</h3>
+                                <p>Ready for indexing</p>
+                            </div>
+                        </div>
+                        <p class="instruction">Select an audio file from the sidebar to begin analysis</p>
+                    </div>
+                </div>
+
+                <!-- File Details Screen -->
+                <div class="file-details-screen hidden" id="fileDetailsScreen">
+                    <div class="file-header">
+                        <div class="file-info">
+                            <i class="fas fa-file-audio"></i>
+                            <div>
+                                <h2 id="fileName">filename.wav</h2>
+                                <p id="fileMetadata">Size: 2.5 MB • Modified: 2024-01-15</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-large" onclick="analyzeFile()" id="analyzeBtn">
+                            <i class="fas fa-play"></i> Analyze Call
+                        </button>
+                    </div>
+
+                    <!-- Analysis Results -->
+                    <div class="analysis-results hidden" id="analysisResults">
+                        <!-- Processing State -->
+                        <div class="processing-state" id="processingState">
+                            <div class="spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                            <h3>Analyzing Call...</h3>
+                            <p>Transcribing audio and extracting healthcare insights</p>
+                        </div>
+
+                        <!-- Results Display -->
+                        <div class="results-display hidden" id="resultsDisplay">
+                            <!-- Version Navigator -->
+                            <div class="version-navigator" id="versionNavigator" style="display: none;">
+                                <div class="version-info">
+                                    <div>
+                                        <span id="currentVersion" class="version-label">Version 1</span>
+                                        <span class="version-count" id="versionCount">(1 of 1)</span>
+                                    </div>
+                                    <small id="versionDate" class="version-date"></small>
+                                </div>
+                                <div class="version-controls">
+                                    <button class="btn btn-sm" onclick="previousVersion()" id="prevVersionBtn">
+                                        <i class="fas fa-chevron-left"></i> Previous
+                                    </button>
+                                    <button class="btn btn-sm" onclick="nextVersion()" id="nextVersionBtn">
+                                        <i class="fas fa-chevron-right"></i> Next
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="analyzeFile()">
+                                        <i class="fas fa-redo"></i> Re-analyze
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Summary Card -->
+                            <div class="card summary-card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-clipboard-list"></i> Call Summary</h3>
+                                    <span class="badge" id="urgencyBadge">Low Urgency</span>
+                                </div>
+                                <div class="card-body">
+                                    <p id="callSummary">Loading summary...</p>
+                                    <div class="metadata-grid">
+                                        <div class="metadata-item">
+                                            <span class="label">Duration</span>
+                                            <span class="value" id="callDuration">-</span>
+                                        </div>
+                                        <div class="metadata-item">
+                                            <span class="label">Provider</span>
+                                            <span class="value" id="providerName">-</span>
+                                        </div>
+                                        <div class="metadata-item">
+                                            <span class="label">Confidence</span>
+                                            <span class="value" id="confidence">-</span>
+                                        </div>
+                                        <div class="metadata-item">
+                                            <span class="label">Sentiment</span>
+                                            <span class="value" id="sentiment">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Grid Layout for Cards -->
+                            <div class="cards-grid">
+                                <!-- Medical Conditions -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3><i class="fas fa-notes-medical"></i> Medical Conditions</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="conditionsList" class="items-list">
+                                            <p class="empty-state">No conditions identified</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Medications -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3><i class="fas fa-pills"></i> Medications</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="medicationsList" class="items-list">
+                                            <p class="empty-state">No medications identified</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Symptoms -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3><i class="fas fa-thermometer"></i> Symptoms</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="symptomsList" class="items-list">
+                                            <p class="empty-state">No symptoms identified</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Follow-up Actions -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3><i class="fas fa-calendar-check"></i> Follow-up Actions</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="followUpsList" class="items-list">
+                                            <p class="empty-state">No follow-up actions</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Enhanced Summary (if available) -->
+                            <div class="card" id="enhancedSummaryCard" style="display: none;">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-brain"></i> AI-Enhanced Analysis (Nemotron)</h3>
+                                    <span class="badge" style="background: #667eea; color: white;">AI Generated</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="enhanced-section">
+                                        <h4>Clinical Summary</h4>
+                                        <p id="clinicalSummary" class="summary-text"></p>
+                                    </div>
+                                    <div class="enhanced-section">
+                                        <h4>Key Takeaways</h4>
+                                        <ul id="keyTakeawaysList" class="takeaways-list"></ul>
+                                    </div>
+                                    <div class="enhanced-section">
+                                        <h4>Recommended Actions</h4>
+                                        <ul id="recommendedActionsList" class="actions-list"></ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transcription -->
+                            <div class="card">
+                                <div class="card-header clickable" onclick="toggleTranscription()">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <h3><i class="fas fa-file-alt"></i> Full Transcription</h3>
+                                        <i class="fas fa-chevron-down" id="transcriptionToggleIcon"></i>
+                                    </div>
+                                    <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); copyTranscription()">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <div class="card-body collapsible" id="transcriptionBody" style="display: none;">
+                                    <div id="transcriptionText" class="transcription-text">
+                                        Loading transcription...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Key Topics -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-tags"></i> Key Topics</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div id="topicsList" class="tags-list">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Compliance -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-shield-alt"></i> Compliance Indicators</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div id="complianceList" class="compliance-list">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Structured Data Preview -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-database"></i> Structured Data (Solr-Ready)</h3>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-sm btn-primary" id="pushToSolrBtn">
+                                            <i class="fas fa-upload"></i> Push to Solr
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" onclick="downloadJSON()">
+                                            <i class="fas fa-download"></i> Download JSON
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <pre id="structuredData" class="json-preview"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Dashboard Panel -->
+            <div class="dashboard-panel" id="dashboardPanel" style="display: none;">
+                <div class="dashboard-header">
+                    <h2><i class="fas fa-chart-bar"></i> Solr Data Dashboard</h2>
+                    <p>Query and analyze all indexed call data</p>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="dashboard-stats" id="dashboardStats">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #2196F3;">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalCalls">-</div>
+                            <div class="stat-label">Total Calls</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #f44336;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="highUrgency">-</div>
+                            <div class="stat-label">High Urgency</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #4caf50;">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="clinicalCalls">-</div>
+                            <div class="stat-label">Clinical Calls</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #ff9800;">
+                            <i class="fas fa-smile"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="positiveSentiment">-</div>
+                            <div class="stat-label">Positive Sentiment</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categorical Insights -->
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <h4><i class="fas fa-pills"></i> Top Medications</h4>
+                            <span class="insight-count" id="medicationsCount">-</span>
+                        </div>
+                        <div class="insight-content" id="topMedications">
+                            <div class="loading-text">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <h4><i class="fas fa-stethoscope"></i> Top Conditions</h4>
+                            <span class="insight-count" id="conditionsCount">-</span>
+                        </div>
+                        <div class="insight-content" id="topConditions">
+                            <div class="loading-text">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <h4><i class="fas fa-heartbeat"></i> Top Symptoms</h4>
+                            <span class="insight-count" id="symptomsCount">-</span>
+                        </div>
+                        <div class="insight-content" id="topSymptoms">
+                            <div class="loading-text">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="dashboard-search">
+                    <div class="search-bar">
+                        <input type="text" id="searchQuery" class="input" placeholder="Search by medication, condition, symptom, or text...">
+                        <button class="btn btn-primary" onclick="searchCalls()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    <div class="search-filters">
+                        <select id="filterUrgency" class="input" style="width: auto;">
+                            <option value="">All Urgency Levels</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <select id="filterCallType" class="input" style="width: auto;">
+                            <option value="">All Call Types</option>
+                            <option value="clinical">Clinical</option>
+                            <option value="administrative">Administrative</option>
+                            <option value="general">General</option>
+                        </select>
+                        <select id="filterSentiment" class="input" style="width: auto;">
+                            <option value="">All Sentiments</option>
+                            <option value="positive">Positive</option>
+                            <option value="neutral">Neutral</option>
+                            <option value="negative">Negative</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="dashboard-results">
+                    <div class="results-header">
+                        <h3 id="resultsTitle">Recent Calls</h3>
+                        <span class="results-count" id="resultsCount">Loading...</span>
+                    </div>
+                    <div class="results-table-container">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>File</th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Urgency</th>
+                                    <th>Sentiment</th>
+                                    <th>Conditions</th>
+                                    <th>Medications</th>
+                                    <th>Symptoms</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="results-pagination" id="resultsPagination" style="display: none;">
+                        <button class="btn btn-sm" onclick="previousPage()" id="prevPageBtn">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <span id="pageInfo">Page 1</span>
+                        <button class="btn btn-sm" onclick="nextPage()" id="nextPageBtn">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal hidden" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-upload"></i> Upload Audio File</h3>
+                <button class="modal-close" onclick="closeModal('uploadModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Drag and drop audio file here or click to browse</p>
+                    <input type="file" id="fileInput" accept=".wav,.mp3,.m4a,.flac,.ogg,.opus" onchange="handleFileSelect(event)">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        Select File
+                    </button>
+                </div>
+                <div class="upload-progress hidden" id="uploadProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p id="uploadStatus">Uploading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Folder Modal -->
+    <div class="modal hidden" id="newFolderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-folder-plus"></i> Create New Folder</h3>
+                <button class="modal-close" onclick="closeModal('newFolderModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="folderNameInput" class="input" placeholder="Folder name" />
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeModal('newFolderModal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="createFolder()">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- First-Time Setup Modal -->
+    <div class="modal" id="setupModal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h3><i class="fas fa-rocket"></i> Welcome to Healthcare Call Analytics!</h3>
+            </div>
+            <div class="modal-body">
+                <div class="setup-welcome">
+                    <div class="setup-icon">
+                        <i class="fas fa-cog fa-3x"></i>
+                    </div>
+                    <h2>Initial Setup Required</h2>
+                    <p>To get started, please configure your application settings.</p>
+                    
+                    <div class="setup-checklist">
+                        <h4>Configuration Needed:</h4>
+                        <ul id="setupChecklistItems">
+                            <li><i class="fas fa-circle"></i> CDP Base URL</li>
+                            <li><i class="fas fa-circle"></i> CDP Authentication (Token or JWT Path)</li>
+                        </ul>
+                    </div>
+
+                    <div class="setup-info">
+                        <div class="info-box">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <strong>What you'll need:</strong>
+                                <ul>
+                                    <li><strong>Required:</strong> CDP Riva ASR Whisper endpoint URL</li>
+                                    <li><strong>Required:</strong> CDP authentication (token OR JWT file path)</li>
+                                    <li><strong>Optional:</strong> Nemotron endpoint for AI summaries</li>
+                                </ul>
+                                <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                    <i class="fas fa-key"></i> Both services use the same CDP authentication
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setup-actions">
+                        <button class="btn btn-primary btn-large" onclick="closeSetupAndOpenSettings()">
+                            <i class="fas fa-cog"></i> Configure Now
+                        </button>
+                        <button class="btn btn-secondary" onclick="dismissSetup()">
+                            <i class="fas fa-times"></i> Skip for Now
+                        </button>
+                    </div>
+
+                    <div class="setup-note">
+                        <small><i class="fas fa-lightbulb"></i> You can access Settings anytime from the header menu</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal hidden" id="settingsModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fas fa-cog"></i> Application Settings</h3>
+                <button class="modal-close" onclick="closeModal('settingsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="settings-tab active" onclick="showSettingsTab('transcription')">
+                        <i class="fas fa-microphone"></i> Transcription
+                    </button>
+                    <button class="settings-tab" onclick="showSettingsTab('summarization')">
+                        <i class="fas fa-brain"></i> AI Summarization
+                    </button>
+                    <button class="settings-tab" onclick="showSettingsTab('solr')">
+                        <i class="fas fa-database"></i> Solr Indexing
+                    </button>
+                    <button class="settings-tab" onclick="showSettingsTab('general')">
+                        <i class="fas fa-sliders-h"></i> General
+                    </button>
+                </div>
+
+                <!-- Transcription Settings -->
+                <div class="settings-content active" id="transcriptionSettings">
+                    <h4>CDP Transcription Configuration</h4>
+                    <div class="form-group">
+                        <label>Riva ASR Whisper Endpoint URL</label>
+                        <input type="text" id="cdpBaseUrl" class="input" placeholder="https://ml-xxxxx.cloudera.site/.../riva-whisper-audio-transcribe/v1" />
+                        <small>Your CDP Riva ASR Whisper endpoint (from CML)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>CDP JWT Path</label>
+                        <input type="text" id="cdpJwtPath" class="input" placeholder="/tmp/jwt" />
+                        <small>Path to JWT token file (usually /tmp/jwt in CML)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>CDP Token (Optional - Alternative to JWT file)</label>
+                        <div class="token-input-group">
+                            <input type="password" id="cdpToken" class="input" placeholder="Enter CDP token or leave empty to use JWT file" />
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="toggleTokenVisibility()">
+                                <i class="fas fa-eye" id="tokenToggleIcon"></i>
+                            </button>
+                        </div>
+                        <small id="tokenStatus">Status: Using JWT file</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Default Language</label>
+                        <select id="defaultLanguage" class="input">
+                            <option value="en">English (en)</option>
+                            <option value="es">Spanish (es)</option>
+                            <option value="fr">French (fr)</option>
+                            <option value="de">German (de)</option>
+                            <option value="it">Italian (it)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Summarization Settings -->
+                <div class="settings-content" id="summarizationSettings">
+                    <h4>AI-Powered Summarization (Nemotron)</h4>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="nemotronEnabled" />
+                            Enable Nemotron AI Summarization
+                        </label>
+                        <small>Use NVIDIA Nemotron LLM for enhanced call summaries and insights</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Nemotron Endpoint URL</label>
+                        <input type="text" id="nemotronBaseUrl" class="input" placeholder="https://ml-xxxxx.cloudera.site/.../nemotron/v1" />
+                        <small>OpenAI-compatible endpoint for Nemotron model from your CDP environment</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Model ID</label>
+                        <input type="text" id="nemotronModelId" class="input" placeholder="nvidia/llama-3.3-nemotron-super-49b-v1" />
+                        <small>Nemotron model identifier</small>
+                    </div>
+                    
+                    <div class="info-box success-box">
+                        <i class="fas fa-key"></i>
+                        <div>
+                            <strong>Authentication:</strong>
+                            <p>Nemotron uses the same CDP authentication as your Riva ASR service. The CDP Token or JWT file configured in the Transcription tab will be used for both services.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <strong>About Nemotron:</strong>
+                            <p>Nemotron enhances your analysis with AI-generated clinical summaries, key takeaways, and recommended actions using advanced language understanding.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solr Settings -->
+                <div class="settings-content" id="solrSettings">
+                    <h4>Solr Indexing Configuration</h4>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="solrEnabled" />
+                            Enable Solr Indexing
+                        </label>
+                        <small>Push call analysis data to Cloudera Solr for search and analytics</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Solr Base URL</label>
+                        <input type="text" id="solrBaseUrl" class="input" placeholder="https://<gateway>.cloudera.site/solr/">
+                        <small>Your CDP Solr endpoint URL (Knox gateway)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Collection Name</label>
+                        <input type="text" id="solrCollectionName" class="input" placeholder="healthcare_calls">
+                        <small>Solr collection name (will be created automatically if it doesn't exist)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Solr CDP Token</label>
+                        <div class="token-input-group">
+                            <input type="password" id="solrToken" class="input" placeholder="Enter Solr CDP access token">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="toggleSolrTokenVisibility()">
+                                <i class="fas fa-eye" id="solrTokenToggleIcon"></i>
+                            </button>
+                        </div>
+                        <small id="solrTokenStatus">Solr requires its own CDP access token</small>
+                    </div>
+                    
+                    <div class="info-box success-box">
+                        <i class="fas fa-key"></i>
+                        <div>
+                            <strong>Authentication:</strong>
+                            <p>Solr uses its own separate CDP authentication token (Knox Bearer Token). This is different from the tokens used for Riva ASR and Nemotron services.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <strong>About Solr Indexing:</strong>
+                            <p>When enabled, you can push call analysis results to Solr for powerful search, filtering, and analytics across all your healthcare calls. The collection will be created automatically with auto-field creation enabled.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- General Settings -->
+                <div class="settings-content" id="generalSettings">
+                    <h4>General Configuration</h4>
+                    <div class="form-group">
+                        <label>Server Host</label>
+                        <input type="text" id="serverHost" class="input" value="0.0.0.0" readonly />
+                        <small>Requires restart to change</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Server Port</label>
+                        <input type="number" id="serverPort" class="input" value="8000" readonly />
+                        <small>Requires restart to change</small>
+                    </div>
+                    
+                    <h4 style="margin-top: 2rem;">Knox Token Auto-Renewal (Optional)</h4>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="autoRenewTokens" />
+                            Enable Automatic Token Renewal
+                        </label>
+                        <small>Automatically renew Knox tokens before they expire (recommended)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Knox Token Renewal Endpoint</label>
+                        <input type="text" id="knoxRenewalEndpoint" class="input" placeholder="https://hostname/homepage/knoxtoken/api/v2/token/renew">
+                        <small>Knox API endpoint for token renewal (leave empty to disable)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Hadoop JWT Cookie (Optional)</label>
+                        <input type="password" id="hadoopJwt" class="input" placeholder="hadoop-jwt cookie value">
+                        <small>Required for token renewal authentication (get from browser cookies)</small>
+                    </div>
+                    
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <strong>About Token Auto-Renewal:</strong>
+                            <p>Knox tokens expire after 24 hours. Enable auto-renewal to automatically refresh tokens 2 hours before expiry. This prevents "Token has expired" errors.</p>
+                            <p><strong>Setup:</strong> Get your <code>hadoop-jwt</code> cookie from browser DevTools → Application → Cookies after logging into Knox.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-box success-box">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>Persistent Settings:</strong>
+                            <p>All changes are automatically saved to your .env file and will persist across application restarts.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeModal('settingsModal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js?v=20251202-11"></script>
+</body>
+</html>
+

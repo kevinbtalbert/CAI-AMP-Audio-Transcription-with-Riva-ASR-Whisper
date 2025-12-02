@@ -37,6 +37,14 @@ A web application for transcribing and analyzing patient-provider healthcare cal
 - Automatic Knox token renewal
 - Real-time model health monitoring
 
+![](/screenshots/screenshot-dashboard-1.png)
+
+![](/screenshots/screenshot-files-1.png)
+
+![](/screenshots/screenshot-files-2.png)
+
+![](/screenshots/screenshot-files-3.png)
+
 ## Quick Start
 
 ### Prerequisites
